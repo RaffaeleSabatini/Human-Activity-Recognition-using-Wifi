@@ -2,6 +2,8 @@
 
 # Dataset
 doppler_traces
+doppler_traces_test
+doppler_traces_train
 
 # Papers
 papers
