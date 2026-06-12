@@ -1,4 +1,6 @@
 .DS_Store
+.vscode
+models/__pycache__
 
 # Dataset
 doppler_traces
