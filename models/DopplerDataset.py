@@ -20,12 +20,28 @@ class DopplerDataset(Dataset):
         img_name = sorted(listdir(self.dataset_dir))[idx]
 
         sample = np.load(self.dataset_dir+'/'+img_name, allow_pickle=True).T
+        sample = torch.tensor(sample, dtype=torch.float32)
         if self.transform:
-            image = self.transform(image)
+            sample = self.transform(sample)
+        image = sample.unsqueeze(0)
+
+        # Labels are extracted by file name and converted to numbers
+        labels_map = {
+            "S": 0,
+            "W": 1,
+            "R": 2,
+            "C": 3,
+            "E": 4,
+            "L": 5,
+            "H": 6,
+            "J": 7
+        }
 
         label  = img_name.split("_")[1]
-        label  = label[0]                   # Labels like J1, J2 are intended as J 
-        if self.target_transform:
-            label = self.target_transform(label)
+        label  = str(label[0])                   # Labels like J1, J2 are intended as J 
+        label = torch.tensor(labels_map[label], dtype=torch.int32)
 
-        return sample, label
+        if self.target_transform:
+            label = self.target_transform(label)   
+
+        return image, label
