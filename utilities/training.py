@@ -1,20 +1,16 @@
 import torch
+import numpy as np
 from torch import nn
+from time import time
 
-def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity, loss_history=None):
+def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
     size = len(data_loader.dataset)
     batch_size = data_loader.batch_size
-    loss = torch.tensor([1e10], device=device)
+    start = time()
 
     # Set the model to training mode
     model.train()
     for batch, (X, y) in enumerate(data_loader):
-        # Verbose
-        if verbosity and (batch % 10) == 0:
-            loss    = loss.item()
-            current = batch * batch_size
-            print(f"loss: {loss:.5e}  [{current:>5d}/{size:>5d}]")
-
         # Move data to GPU
         X = X.to(device)
         y = y.to(device)
@@ -27,14 +23,16 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity, loss_h
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
+        
+        # Verbose
+        if verbosity and (batch % 10) == 0:
+            loss    = loss.item()
+            current = (batch+1) * batch_size
+            print(f"Loss: {loss:.5e} --- Samples: {current:>5d}/{size:>5d}")
+    
+    return loss, time()-start
 
-        # Save loss
-        if loss_history:
-            loss_history.append(loss)
-
-
-
-def test_loop(model, dataloader, loss_fn, device, loss_history=None):
+def test_loop(model, dataloader, loss_fn, device, verbosity):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
 
@@ -52,10 +50,35 @@ def test_loop(model, dataloader, loss_fn, device, loss_history=None):
             test_loss += loss_fn(pred, y).item()
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
 
-            # Save loss
-            if loss_history:
-                loss_history.append(test_loss)
-
     test_loss /= num_batches
     correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+    if verbosity:
+        print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+    return test_loss, correct*100
+
+#---------------------------------------------------------------------------------------------------
+
+def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, optimizer, device, verbosity):
+    model.to(device)
+    train_loss_history = np.zeros(epochs)
+    test_loss_history  = np.zeros(epochs)
+    train_time_history = np.zeros(epochs)
+    start = time()
+
+    print("Starting model training...")
+    print(f"Completed epochs: 0/{epochs}")
+    for epoch in range(epochs):
+        relative_start = time()
+
+        train_loss, train_time = train_loop(model, train_data_loader, loss_fn, optimizer, device, verbosity)
+        test_loss, accuracy    = test_loop(model, test_data_loader, loss_fn, device, verbosity)
+
+        train_loss_history[epoch] = train_loss
+        test_loss_history[epoch]  = test_loss
+        train_time_history[epoch] = train_time
+
+        print(f"Completed epochs: {epoch+1}/{epochs} ------ Time (total): {time()-start:.2f} ------ Time (relative): {time()-relative_start:.2f}\n")
+    
+    return train_loss_history, test_loss_history, train_time_history

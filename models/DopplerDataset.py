@@ -1,16 +1,18 @@
 import torch
-from torch.utils.data import Dataset
 import numpy as np
+
 from os import listdir
 from os.path import isdir
+from torch.utils.data import Dataset
+from tqdm import tqdm
 
 class DopplerDataset(Dataset):
     def __init__(self, dataset_dir, transform=None, target_transform=None):
         self.dataset_dir      = dataset_dir
-        self.images_list      = sorted([img_name for img_name in listdir(self.dataset_dir) if img_name.endswith('.npy') and img_name.startswith('S')])
         self.transform        = transform
         self.target_transform = target_transform
-        self.labels_map       = {
+
+        labels_map = {
             "S": 0,
             "W": 1,
             "R": 2,
@@ -21,26 +23,34 @@ class DopplerDataset(Dataset):
             "J": 7
         }
 
+        # Loading the full dataset in memory
+        self.images_list  = sorted([img_name for img_name in listdir(dataset_dir) if img_name.endswith('.npy') and img_name.startswith('S')])
+        self.dataset_size = len(self.images_list)
+        self.dataset      = torch.zeros((self.dataset_size, 100, 340), dtype=torch.float32)
+        self.labels       = torch.zeros(self.dataset_size, dtype=torch.long)
+
+        print(f"Loading dataset {dataset_dir} in memory...")
+        for i, img_name in tqdm(enumerate(self.images_list)):
+            # Image loading
+            sample          = np.load(dataset_dir+'/'+img_name, allow_pickle=True).T.copy()
+            self.dataset[i] = torch.tensor(sample, dtype=torch.float32) 
+
+            # Label loading
+            label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J    
+            self.labels[i] = torch.tensor(labels_map[label], dtype=torch.int32) 
+        print(f"Dataset is loaded!")
+
     def __len__(self):        
-        return len(self.images_list)
+        return self.dataset_size
     
     def __getitem__(self, idx):
-        sample = []; label = ""
-
-        img_name = self.images_list[idx]
-
-        sample = np.load(self.dataset_dir+'/'+img_name, allow_pickle=True).T.copy()
-        sample = torch.tensor(sample, dtype=torch.float32)
+        sample = self.dataset[idx]
         if self.transform:
             sample = self.transform(sample)
-        image = sample.unsqueeze(0)
+        sample = sample.unsqueeze(0)
 
-        # Labels are extracted by file name and converted to numbers
-        label  = img_name.split("_")[1]
-        label  = str(label[0])                   # Labels like J1, J2 are intended as J 
-        label = torch.tensor(self.labels_map[label], dtype=torch.int32)
-
+        label = self.labels[idx]
         if self.target_transform:
             label = self.target_transform(label)   
 
-        return image, label
+        return sample, label
