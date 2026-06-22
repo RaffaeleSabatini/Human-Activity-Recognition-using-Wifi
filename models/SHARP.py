@@ -29,10 +29,14 @@ class SHARP(nn.Module):
             nn.Linear(in_features=25500, out_features=n_features) # corresponds to number of activities
         )
     
-    def forward(self, x):
+    def forward(self, x, return_pred):
         x1 = self.branch1(x)
         x2 = self.branch2(x)
         x3 = self.branch3(x)
         x = torch.cat([x1, x2, x3], dim=1)
         y = self.out(x)
-        return y
+        
+        if return_pred:
+            return torch.argmax(y), y
+        else:
+            return y

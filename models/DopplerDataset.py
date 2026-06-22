@@ -18,7 +18,7 @@ class DopplerDataset(Dataset):
         self.dataset      = torch.zeros((self.dataset_size, 100, 340), dtype=torch.float32)
         self.labels       = torch.zeros(self.dataset_size, dtype=torch.long)
 
-        labels_map = {activity:i for i, activity in enumerate(activities)}  # Generates pairing between activities and labels
+        self.labels_map = {activity:i for i, activity in enumerate(activities)}  # Generates pairing between activities and labels
         print(f"Loading dataset {dataset_dir} in memory...")
         for i, img_name in tqdm(enumerate(self.images_list)):
             # Image loading
@@ -27,7 +27,7 @@ class DopplerDataset(Dataset):
 
             # Label loading
             label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J    
-            self.labels[i] = torch.tensor(labels_map[label], dtype=torch.int32) 
+            self.labels[i] = torch.tensor(self.labels_map[label], dtype=torch.int32) 
         print(f"Dataset is loaded!")
 
     def __len__(self):        
@@ -44,3 +44,9 @@ class DopplerDataset(Dataset):
             label = self.target_transform(label)   
 
         return sample, label
+    
+    def getInfo(self):
+        print(f"\n{"-"*10} DATASET INFO {"-"*10}\n")
+        print(f"Dataset directory:\n{self.dataset_dir}")
+        print(f"Labels dictionary:\n{self.labels_map}\n")
+        print(f"{"-"*34}\n")

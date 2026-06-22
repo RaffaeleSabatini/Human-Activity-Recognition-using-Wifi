@@ -18,9 +18,9 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
         y = y.to(device)
 
         # Compute prediction and loss
-        pred      = model(X)
-        loss      = loss_fn(pred, y)
-        avg_loss += loss.item()
+        logits = model(X, return_pred=False)
+        loss            = loss_fn(logits, y)
+        avg_loss       += loss.item()
 
         # Backpropagation
         loss.backward()
@@ -46,21 +46,32 @@ def test_loop(model, dataloader, loss_fn, device, verbosity):
 
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode
     with torch.no_grad():
-        for (X, y) in dataloader:
+        for i, (X, y) in enumerate(dataloader):
             X = X.to(device)
             y = y.to(device)
 
-            pred = model(X)
-            test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+            logits = model(X, return_pred=False)  # Shape: (batch, activity)
+            test_loss += loss_fn(logits, y).item()
+
+            if torch.any(y != y[0]):
+                print(f"Error: in batch {i} antennas produced different labels for the same task!")
+                break
+            
+            # Soft-fusion
+            probabilities     = torch.softmax(logits, dim=1)
+            avg_probabilities = torch.mean(probabilities, dim=0)
+            pred = torch.argmax(avg_probabilities)
+
+            if y[0].item() == pred.item():
+                correct += 1
 
     test_loss /= num_batches
-    correct /= size
+    accuracy = correct/num_batches
 
     if verbosity:
-        print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+        print(f"Test Error: \n Accuracy: {(100*accuracy):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-    return test_loss, correct*100
+    return test_loss, accuracy*100
 
 #---------------------------------------------------------------------------------------------------
 
