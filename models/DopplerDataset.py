@@ -7,21 +7,10 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 
 class DopplerDataset(Dataset):
-    def __init__(self, dataset_dir, transform=None, target_transform=None):
+    def __init__(self, dataset_dir, activities, transform=None, target_transform=None):
         self.dataset_dir      = dataset_dir
         self.transform        = transform
         self.target_transform = target_transform
-
-        labels_map = {
-            "S": 0,
-            "W": 1,
-            "R": 2,
-            "C": 3,
-            "E": 4,
-            "L": 5,
-            "H": 6,
-            "J": 7
-        }
 
         # Loading the full dataset in memory
         self.images_list  = sorted([img_name for img_name in listdir(dataset_dir) if img_name.endswith('.npy') and img_name.startswith('S')])
@@ -29,6 +18,7 @@ class DopplerDataset(Dataset):
         self.dataset      = torch.zeros((self.dataset_size, 100, 340), dtype=torch.float32)
         self.labels       = torch.zeros(self.dataset_size, dtype=torch.long)
 
+        labels_map = {activity:i for i, activity in enumerate(activities)}  # Generates pairing between activities and labels
         print(f"Loading dataset {dataset_dir} in memory...")
         for i, img_name in tqdm(enumerate(self.images_list)):
             # Image loading

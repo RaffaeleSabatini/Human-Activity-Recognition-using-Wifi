@@ -5,7 +5,9 @@ from time import time
 
 def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
     size = len(data_loader.dataset)
+    num_batches = len(data_loader)
     batch_size = data_loader.batch_size
+    avg_loss = 0
     start = time()
 
     # Set the model to training mode
@@ -16,8 +18,9 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
         y = y.to(device)
 
         # Compute prediction and loss
-        pred = model(X)
-        loss = loss_fn(pred, y)
+        pred      = model(X)
+        loss      = loss_fn(pred, y)
+        avg_loss += loss.item()
 
         # Backpropagation
         loss.backward()
@@ -30,7 +33,8 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
             current = (batch+1) * batch_size
             print(f"Loss: {loss:.5e} --- Samples: {current:>5d}/{size:>5d}")
     
-    return loss, time()-start
+    avg_loss /= num_batches
+    return avg_loss, time()-start
 
 def test_loop(model, dataloader, loss_fn, device, verbosity):
     size = len(dataloader.dataset)
@@ -68,7 +72,7 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
     start = time()
 
     print("Starting model training...")
-    print(f"Completed epochs: 0/{epochs}")
+    print(f"Completed epochs: 0/{epochs} ------ Time (total): {0:.2f} ------ Time (relative): {0:.2f}\n")
     for epoch in range(epochs):
         relative_start = time()
 

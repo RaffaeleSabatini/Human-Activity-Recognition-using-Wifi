@@ -5,7 +5,7 @@ class SHARP(nn.Module):
     '''
         Simplified version of Inception-v4 Neural Network
     '''
-    def __init__(self):
+    def __init__(self, n_features):
         super().__init__()
 
         self.branch1 = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -26,7 +26,7 @@ class SHARP(nn.Module):
             nn.ReLU(),
             nn.Flatten(),
             nn.Dropout(p=0.2),
-            nn.Linear(in_features=25500, out_features=8) # 8 labels
+            nn.Linear(in_features=25500, out_features=n_features) # corresponds to number of activities
         )
     
     def forward(self, x):
