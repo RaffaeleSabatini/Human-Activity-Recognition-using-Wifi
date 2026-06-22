@@ -9,6 +9,7 @@ from tqdm import tqdm
 class DopplerDataset(Dataset):
     def __init__(self, dataset_dir, activities, transform=None, target_transform=None):
         self.dataset_dir      = dataset_dir
+        self.labels_map       = activities
         self.transform        = transform
         self.target_transform = target_transform
 
@@ -17,13 +18,15 @@ class DopplerDataset(Dataset):
         self.dataset_size = len(self.images_list)
         self.dataset      = torch.zeros((self.dataset_size, 100, 340), dtype=torch.float32)
         self.labels       = torch.zeros(self.dataset_size, dtype=torch.long)
-
-        self.labels_map = {activity:i for i, activity in enumerate(activities)}  # Generates pairing between activities and labels
+          
         print(f"Loading dataset {dataset_dir} in memory...")
         for i, img_name in tqdm(enumerate(self.images_list)):
-            # Image loading
+            # Image pre-processing 
             sample          = np.load(dataset_dir+'/'+img_name, allow_pickle=True).T.copy()
-            self.dataset[i] = torch.tensor(sample, dtype=torch.float32) 
+            db_sample       = 10*np.log10(sample+10-9)          # Decibel conversion
+            db_sample       = db_sample - db_sample.max()       # Normalizatin
+            preproc_sample  = np.clip(db_sample, a_min=-12, a_max=0)
+            self.dataset[i] = torch.tensor(preproc_sample, dtype=torch.float32) 
 
             # Label loading
             label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J    

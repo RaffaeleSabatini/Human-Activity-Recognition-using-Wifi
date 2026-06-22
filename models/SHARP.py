@@ -37,6 +37,6 @@ class SHARP(nn.Module):
         y = self.out(x)
         
         if return_pred:
-            return torch.argmax(y), y
+            return torch.argmax(y, dim=1), y
         else:
             return y

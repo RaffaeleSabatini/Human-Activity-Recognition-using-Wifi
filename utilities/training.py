@@ -50,19 +50,17 @@ def test_loop(model, dataloader, loss_fn, device, verbosity):
             X = X.to(device)
             y = y.to(device)
 
-            logits = model(X, return_pred=False)  # Shape: (batch, activity)
+            pred, logits = model(X, return_pred=True)  # Shape: (batch, activity)
             test_loss += loss_fn(logits, y).item()
 
             if torch.any(y != y[0]):
                 print(f"Error: in batch {i} antennas produced different labels for the same task!")
                 break
             
-            # Soft-fusion
-            probabilities     = torch.softmax(logits, dim=1)
-            avg_probabilities = torch.mean(probabilities, dim=0)
-            pred = torch.argmax(avg_probabilities)
-
-            if y[0].item() == pred.item():
+            # Hard-fusion
+            pred_cpu = pred.cpu()
+            mode, _ = torch.mode(pred_cpu)
+            if y[0].cpu().item() == mode.item():
                 correct += 1
 
     test_loss /= num_batches
