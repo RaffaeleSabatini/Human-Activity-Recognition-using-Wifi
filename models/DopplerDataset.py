@@ -23,10 +23,9 @@ class DopplerDataset(Dataset):
         for i, img_name in tqdm(enumerate(self.images_list)):
             # Image pre-processing 
             sample          = np.load(dataset_dir+'/'+img_name, allow_pickle=True).T.copy()
-            db_sample       = 10*np.log10(sample+10-9)          # Decibel conversion
+            db_sample       = 10*np.log10(sample)               # Decibel conversion
             db_sample       = db_sample - db_sample.max()       # Normalizatin
-            preproc_sample  = np.clip(db_sample, a_min=-12, a_max=0)
-            self.dataset[i] = torch.tensor(preproc_sample, dtype=torch.float32) 
+            self.dataset[i] = torch.tensor(db_sample, dtype=torch.float32) 
 
             # Label loading
             label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J    
@@ -38,6 +37,7 @@ class DopplerDataset(Dataset):
     
     def __getitem__(self, idx):
         sample = self.dataset[idx]
+        #sample = (sample-sample.mean())/(sample.std()+1e-12)
         if self.transform:
             sample = self.transform(sample)
         sample = sample.unsqueeze(0)
@@ -49,7 +49,7 @@ class DopplerDataset(Dataset):
         return sample, label
     
     def getInfo(self):
-        print(f"\n{"-"*10} DATASET INFO {"-"*10}\n")
+        print(f"\n{"-"*10} DATASET INFO {"-"*10}")
         print(f"Dataset directory:\n{self.dataset_dir}")
-        print(f"Labels dictionary:\n{self.labels_map}\n")
+        print(f"Labels dictionary:\n{self.labels_map}")
         print(f"{"-"*34}\n")

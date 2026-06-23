@@ -28,7 +28,7 @@ def create_train_dataset(dataset_path, doppler_trace_size, activity_list):
 
         print("Train dataset created successfully!")
     else:
-        print("Datasets are already splitted!")
+        print("Datasets are already splitted!\n")
     
 #----------------------------------------------------------------------------------------------
 
@@ -53,8 +53,8 @@ def create_test_dataset(dataset_path, doppler_trace_size, activity_list):
 
                     for i in range(N_images):
                         # Images relative to same action but measured by different antennas are contiguously labelled in the dataset
-                        image_idx = i*4+stream
-                        np.save(test_dataset+'/'+trace_name[:-5]+str(image_idx), full_trace[i*doppler_trace_size:(i+1)*doppler_trace_size, :], allow_pickle=True)
+                        image_idx = f"{i*4+stream:04d}"
+                        np.save(test_dataset+'/'+trace_name[:-5]+image_idx, full_trace[i*doppler_trace_size:(i+1)*doppler_trace_size, :], allow_pickle=True)
 
         print("Test dataset created successfully!\n")
     else:

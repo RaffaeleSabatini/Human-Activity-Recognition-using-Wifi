@@ -8,6 +8,7 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
     num_batches = len(data_loader)
     batch_size = data_loader.batch_size
     avg_loss = 0
+    correct = 0
     start = time()
 
     # Set the model to training mode
@@ -18,9 +19,10 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
         y = y.to(device)
 
         # Compute prediction and loss
-        logits = model(X, return_pred=False)
-        loss            = loss_fn(logits, y)
-        avg_loss       += loss.item()
+        pred, logits = model(X, return_pred=True)
+        loss         = loss_fn(logits, y)
+        avg_loss    += loss.item()
+        correct     += (pred == y).float().sum().item()
 
         # Backpropagation
         loss.backward()
@@ -28,13 +30,14 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
         optimizer.zero_grad()
         
         # Verbose
-        if verbosity and (batch % 10) == 0:
+        if verbosity and ((batch % 10) == 0 or (batch == num_batches-1)):
             loss    = loss.item()
             current = (batch+1) * batch_size
-            print(f"Loss: {loss:.5e} --- Samples: {current:>5d}/{size:>5d}")
+            print(f"Loss: {loss:.5e} --- Accuracy: {(correct/current)*100:.3f}% ---Samples: {current:>5d}/{size:>5d}")
     
     avg_loss /= num_batches
-    return avg_loss, time()-start
+    accuracy = correct/size
+    return avg_loss, accuracy, time()-start
 
 def test_loop(model, dataloader, loss_fn, device, verbosity):
     size = len(dataloader.dataset)
@@ -77,6 +80,8 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
     model.to(device)
     train_loss_history = np.zeros(epochs)
     test_loss_history  = np.zeros(epochs)
+    train_accuracy_history = np.zeros(epochs)
+    test_accuracy_history = np.zeros(epochs)
     train_time_history = np.zeros(epochs)
     start = time()
 
@@ -85,13 +90,15 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
     for epoch in range(epochs):
         relative_start = time()
 
-        train_loss, train_time = train_loop(model, train_data_loader, loss_fn, optimizer, device, verbosity)
-        test_loss, accuracy    = test_loop(model, test_data_loader, loss_fn, device, verbosity)
+        train_loss, train_accuracy, train_time = train_loop(model, train_data_loader, loss_fn, optimizer, device, verbosity)
+        test_loss, test_accuracy    = test_loop(model, test_data_loader, loss_fn, device, verbosity)
 
         train_loss_history[epoch] = train_loss
         test_loss_history[epoch]  = test_loss
+        train_accuracy_history[epoch] = train_accuracy
+        test_accuracy_history[epoch] = test_accuracy
         train_time_history[epoch] = train_time
 
         print(f"Completed epochs: {epoch+1}/{epochs} ------ Time (total): {time()-start:.2f} ------ Time (relative): {time()-relative_start:.2f}\n")
     
-    return train_loss_history, test_loss_history, train_time_history
+    return train_loss_history, test_loss_history, train_accuracy_history, test_accuracy_history, train_time_history
