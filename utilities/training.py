@@ -6,9 +6,7 @@ from time import time
 def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
     size = len(data_loader.dataset)
     num_batches = len(data_loader)
-    batch_size = data_loader.batch_size
-    avg_loss = 0
-    correct = 0
+    avg_loss, correct, current = 0, 0, 0
     start = time()
 
     # Set the model to training mode
@@ -30,16 +28,15 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
         optimizer.zero_grad()
         
         # Verbose
+        current += len(X)
         if verbosity and ((batch % 10) == 0 or (batch == num_batches-1)):
-            loss    = loss.item()
-            current = (batch+1) * batch_size
-            print(f"Loss: {loss:.5e} --- Accuracy: {(correct/current)*100:.3f}% ---Samples: {current:>5d}/{size:>5d}")
+            print(f"Loss: {loss.item():.5e} --- Accuracy: {(correct/current)*100:.3f}% --- Samples: {current:>5d}/{size:>5d}")
     
     avg_loss /= num_batches
     accuracy = correct/size
-    return avg_loss, accuracy, time()-start
+    return avg_loss, accuracy*100, time()-start
 
-def test_loop(model, dataloader, loss_fn, device, verbosity):
+def test_loop(model, dataloader, loss_fn, device, verbosity, fusion="soft"):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
 
@@ -53,18 +50,28 @@ def test_loop(model, dataloader, loss_fn, device, verbosity):
             X = X.to(device)
             y = y.to(device)
 
-            pred, logits = model(X, return_pred=True)  # Shape: (batch, activity)
+            pred, logits = model(X, return_pred=True)  # Shapes: (batch), (batch, activity)
             test_loss += loss_fn(logits, y).item()
 
             if torch.any(y != y[0]):
                 print(f"Error: in batch {i} antennas produced different labels for the same task!")
                 break
             
-            # Hard-fusion
-            pred_cpu = pred.cpu()
-            mode, _ = torch.mode(pred_cpu)
-            if y[0].cpu().item() == mode.item():
-                correct += 1
+            if fusion == "soft":
+                probabilities_per_antenna = torch.softmax(logits, dim=1)
+                probabilities = torch.sum(probabilities_per_antenna, dim=0)
+                pred = torch.argmax(probabilities)
+                if y[0].item() == pred.item(): correct += 1
+
+            elif fusion == "hard":
+                pred_cpu = pred.cpu()
+                mode, _ = torch.mode(pred_cpu)
+                if y[0].cpu().item() == mode.item(): correct += 1
+            
+            else:
+                print("Error: parameter 'fusion' must be one between 'hard', 'soft'!")
+                break
+            
 
     test_loss /= num_batches
     accuracy = correct/num_batches

@@ -28,7 +28,7 @@ def create_train_dataset(dataset_path, doppler_trace_size, activity_list):
 
         print("Train dataset created successfully!")
     else:
-        print("Datasets are already splitted!\n")
+        print("Dataset is already splitted!\n")
     
 #----------------------------------------------------------------------------------------------
 

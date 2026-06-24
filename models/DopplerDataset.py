@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 
 class DopplerDataset(Dataset):
-    def __init__(self, dataset_dir, activities, transform=None, target_transform=None):
+    def __init__(self, dataset_dir, activities, db_conversion, normalization, transform=None, target_transform=None):
         self.dataset_dir      = dataset_dir
         self.labels_map       = activities
         self.transform        = transform
@@ -22,22 +22,29 @@ class DopplerDataset(Dataset):
         print(f"Loading dataset {dataset_dir} in memory...")
         for i, img_name in tqdm(enumerate(self.images_list)):
             # Image pre-processing 
-            sample          = np.load(dataset_dir+'/'+img_name, allow_pickle=True).T.copy()
-            db_sample       = 10*np.log10(sample)               # Decibel conversion
-            db_sample       = db_sample - db_sample.max()       # Normalizatin
-            self.dataset[i] = torch.tensor(db_sample, dtype=torch.float32) 
+            sample = np.load(dataset_dir+'/'+img_name, allow_pickle=True).T.copy()
+
+            if db_conversion and normalization:
+                print("Warning: conversion to db and normalization may lead to underperforming model...")
+
+            if db_conversion:
+                sample = 10*np.log10(sample) 
+                sample = sample-sample.max()
+            if normalization:
+                sample = (sample - sample.mean())/sample.std()
+
+            self.dataset[i] = torch.tensor(sample, dtype=torch.float32) 
 
             # Label loading
             label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J    
             self.labels[i] = torch.tensor(self.labels_map[label], dtype=torch.int32) 
-        print(f"Dataset is loaded!")
+        print(f"Dataset is loaded!\n")
 
     def __len__(self):        
         return self.dataset_size
     
     def __getitem__(self, idx):
         sample = self.dataset[idx]
-        #sample = (sample-sample.mean())/(sample.std()+1e-12)
         if self.transform:
             sample = self.transform(sample)
         sample = sample.unsqueeze(0)

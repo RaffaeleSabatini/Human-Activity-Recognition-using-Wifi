@@ -5,6 +5,34 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+
+def plot_dataset(cols, rows, dataset, activities, labels):
+    fig, axes = plt.subplots(rows, cols, figsize=(14, 10))
+    axes = axes.flatten()  
+
+    for i in range(cols * rows):
+        sample_idx = torch.randint(len(dataset), size=(1,)).item()
+        img, label_idx = dataset[sample_idx]
+        
+        ax = axes[i]
+        im = ax.imshow(img[0, :, :], aspect='auto', cmap='viridis')
+        
+        ax.set_title(f"{activities[label_idx]} ({labels[label_idx]})", fontsize=10, pad=8)
+        
+        ax.set_xlabel("Time (bin)", fontsize=8)
+        ax.set_ylabel(r"$v_p \cos \alpha$ (bin)", fontsize=8)
+        ax.tick_params(axis='both', which='major', labelsize=8)
+        
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.ax.tick_params(labelsize=8)
+        cbar.set_label('Power (db)', fontsize=8)
+
+    plt.tight_layout()
+    plt.show()
+
+
+
 def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy):
     epochs = range(1, len(train_loss) + 1)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
