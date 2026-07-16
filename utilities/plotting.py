@@ -123,3 +123,39 @@ def plot_confusion_matrix(cm, class_names):
     
     plt.tight_layout()
     plt.show()
+
+
+def plot_f1_score(precisions, recalls, f1_scores, class_names):
+    data = np.array([precisions, recalls, f1_scores]).T
+    metric_names = ["Precision", "Recall", "F1-Score"]
+    
+    # Prepariamo i testi da mostrare dentro ogni cella (formato percentuale)
+    annot_labels = np.array([[f"{val:.2%}" for val in row] for row in data])
+
+    plt.figure(figsize=(8, 5))
+    sns.heatmap(
+        data,
+        annot=annot_labels,
+        fmt="",
+        cmap="YlGnBu",
+        vmin=0.0,
+        vmax=1.0,
+        cbar_kws={'label': 'Punteggio (0 - 1)'},
+        xticklabels=metric_names,
+        yticklabels=class_names,
+        annot_kws={"size": 11, "weight": "bold"},
+        linewidths=1.5,  # Separazione netta tra le celle
+        linecolor="white"
+    )
+    
+    # Label e formattazione
+    plt.title("Report delle Metriche per Classe", fontsize=14, pad=18, weight='bold')
+    plt.xlabel("Metriche di Performance", fontsize=11, labelpad=12, weight='semibold')
+    plt.ylabel("Classi", fontsize=11, labelpad=12, weight='semibold')
+    
+    # Ruotiamo leggermente i tick 
+    plt.xticks(fontsize=10, weight='semibold')
+    plt.yticks(rotation=0, fontsize=10, weight='semibold')
+    
+    plt.tight_layout()
+    plt.show()

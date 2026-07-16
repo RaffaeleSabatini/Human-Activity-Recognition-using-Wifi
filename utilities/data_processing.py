@@ -70,11 +70,36 @@ def create_test_dataset(dataset_path, doppler_trace_size, activity_list):
 #------------------------------------  MODEL EVALUATION  -------------------------------------
 #---------------------------------------------------------------------------------------------
 
-def compute_confusion_matrix(model, validation_dataset, labels, device, debug=False):
-    
+def compute_metrics(metrics, model, validation_dataset, labels, device, debug=False):
+    '''
+        Computes different metrics of the model, specified by the parameter 'metrics'.
+        Possible choices of the metrics are:
+        
+        •) confusion matrix (cm) of the model for a given validation dataset. 
+        •) precision
+        •) recall
+        •) f1-score
+            (f1-score is the harmonic average of precision and recall)
+    '''
+    # Block code execution if given metrics cannot be computed/do not exist
+    known_metrics = ["cm", "precision", "recall", "f1"]
+    if isinstance(metrics, list):
+        for m in metrics:
+            if m not in known_metrics:
+                raise ValueError(f"Error: {m} is not a known metric. Choose one among {known_metrics}.")
+    elif isinstance(metrics, str):
+        if metrics == "all": 
+            metrics = known_metrics
+        elif metrics in known_metrics: 
+            metrics = [metrics]
+        else:
+            raise ValueError(f"Error: {metrics} is not a knwon metric!")
+    else:
+        raise ValueError("metrics must be a string or a list!")
 
+    # Collect counts for each predicted labels in order to handle metrics computations at the end
     model.eval()
-    confusion_matrix = np.zeros(shape=(len(labels), len(labels)))
+    counts_matrix = np.zeros(shape=(len(labels), len(labels)))
     for i in range(len(labels)):
         single_activity_dataset = validation_dataset.retrieve_activity(i)
         single_activity_dataloader = DataLoader(single_activity_dataset, batch_size=128, shuffle=True)
@@ -87,13 +112,32 @@ def compute_confusion_matrix(model, validation_dataset, labels, device, debug=Fa
             
             pred, logits = model(X.unsqueeze(1), return_pred=True)
             pred_labels, counts = np.unique(pred.cpu().numpy(), return_counts=True)
-            confusion_matrix[i, pred_labels] += counts
+            counts_matrix[i, pred_labels] += counts
 
             correct += (pred == Y).float().sum().item()
 
-        confusion_matrix[i, :] /= np.sum(confusion_matrix[i, :])
         if debug:
             print(f"Label: {labels[i]} --- Score: {correct/len(single_activity_dataloader.dataset)}")
-            print(f"Confusion matrix:\n{confusion_matrix}")
-        
-    return confusion_matrix
+            print(f"Counts matrix:\n{counts_matrix}")
+    
+    # Compute metrics only if present in metrics
+    output = {m:None for m in metrics}
+    if "cm" in metrics or metrics == "all": 
+        confusion_matrix = counts_matrix / np.sum(counts_matrix, axis=1, keepdims=True)
+        output["cm"]=confusion_matrix
+
+    if "precision" in metrics or metrics == "all":
+        precisions = counts_matrix.diagonal() / np.sum(counts_matrix, axis=0)
+        output["precision"] = precisions
+
+    if "recall" in metrics or metrics == "all":
+        recalls = counts_matrix.diagonal() / np.sum(counts_matrix, axis=1)
+        output["recall"] = recalls
+
+    if "f1" in metrics or metrics == "all":
+        if "precision" not in metrics: precisions = counts_matrix.diagonal() / np.sum(counts_matrix, axis=0)
+        if "recall" not in metrics: recalls = counts_matrix.diagonal() / np.sum(counts_matrix, axis=1)
+        f1_score = 2*precisions*recalls/(precisions+recalls)
+        output["f1"] = f1_score
+
+    return output
