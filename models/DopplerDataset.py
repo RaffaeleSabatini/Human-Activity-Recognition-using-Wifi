@@ -3,7 +3,7 @@ import numpy as np
 
 from os import listdir
 from os.path import isdir
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, TensorDataset
 from tqdm import tqdm
 
 class DopplerDataset(Dataset):
@@ -38,7 +38,7 @@ class DopplerDataset(Dataset):
             # Label loading
             label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J    
             self.labels[i] = torch.tensor(self.labels_map[label], dtype=torch.int32) 
-        print(f"Dataset is loaded!\n")
+        print(f"Dataset is loaded!")
 
     def __len__(self):        
         return self.dataset_size
@@ -60,3 +60,9 @@ class DopplerDataset(Dataset):
         print(f"Dataset directory:\n{self.dataset_dir}")
         print(f"Labels dictionary:\n{self.labels_map}")
         print(f"{"-"*34}\n")
+
+    def retrieve_activity(self, label):
+        mask = self.labels == label
+        X_tensor = self.dataset[mask]
+        Y_tensor = self.labels[mask]
+        return TensorDataset(X_tensor, Y_tensor, ) 

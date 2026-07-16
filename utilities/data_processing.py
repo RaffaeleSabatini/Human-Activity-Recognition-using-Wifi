@@ -4,6 +4,11 @@ import numpy.random as rnd
 from os import listdir, makedirs, path
 from glob import glob
 from tqdm import tqdm
+from torch.utils.data import DataLoader
+
+#----------------------------------------------------------------------------------------------
+#------------------------------------  DATASET SPLITTING  -------------------------------------
+#----------------------------------------------------------------------------------------------
 
 def create_train_dataset(dataset_path, doppler_trace_size, activity_list):
     train_dataset = dataset_path.split('/')[0] + "_train"
@@ -59,3 +64,36 @@ def create_test_dataset(dataset_path, doppler_trace_size, activity_list):
         print("Test dataset created successfully!\n")
     else:
         print("Dataset is already splitted!\n")
+
+
+#---------------------------------------------------------------------------------------------
+#------------------------------------  MODEL EVALUATION  -------------------------------------
+#---------------------------------------------------------------------------------------------
+
+def compute_confusion_matrix(model, validation_dataset, labels, device, debug=False):
+    
+
+    model.eval()
+    confusion_matrix = np.zeros(shape=(len(labels), len(labels)))
+    for i in range(len(labels)):
+        single_activity_dataset = validation_dataset.retrieve_activity(i)
+        single_activity_dataloader = DataLoader(single_activity_dataset, batch_size=128, shuffle=True)
+
+        correct = 0
+
+        for X, Y in tqdm(single_activity_dataloader):
+            X = X.to(device)
+            Y = Y.to(device)
+            
+            pred, logits = model(X.unsqueeze(1), return_pred=True)
+            pred_labels, counts = np.unique(pred.cpu().numpy(), return_counts=True)
+            confusion_matrix[i, pred_labels] += counts
+
+            correct += (pred == Y).float().sum().item()
+
+        confusion_matrix[i, :] /= np.sum(confusion_matrix[i, :])
+        if debug:
+            print(f"Label: {labels[i]} --- Score: {correct/len(single_activity_dataloader.dataset)}")
+            print(f"Confusion matrix:\n{confusion_matrix}")
+        
+    return confusion_matrix

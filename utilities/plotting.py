@@ -1,10 +1,7 @@
 import matplotlib.pyplot as plt
+import seaborn as sns
 import numpy as np
 import torch
-
-import matplotlib.pyplot as plt
-import numpy as np
-
 
 
 def plot_dataset(cols, rows, dataset, activities, labels):
@@ -33,10 +30,11 @@ def plot_dataset(cols, rows, dataset, activities, labels):
 
 
 
-def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy):
+def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     epochs = range(1, len(train_loss) + 1)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    
+    fig.suptitle(title)
+
     # --------------------------------------------------------------------------
     # GRAPH 1: LOSS HISTORY
     # --------------------------------------------------------------------------
@@ -73,6 +71,55 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy):
     ax2.set_xticks(epochs)
     ax2.grid(True, linestyle=':', alpha=0.6)
     ax2.legend(fontsize=9, loc='lower right')
+    
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_confusion_matrix(cm, class_names):
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    
+    # Crea le annotazioni di testo combinando il conteggio assoluto e la percentuale
+    labels = []
+    for i in range(cm.shape[0]):
+        row = []
+        for j in range(cm.shape[1]):
+            abs_val = cm[i, j]
+            perc_val = cm_normalized[i, j] * 100
+            # Se la cella è vuota metti solo 0, altrimenti metti valore e percentuale
+            if abs_val > 0:
+                row.append(f"{abs_val:.2f}\n({perc_val:.1f}%)")
+            else:
+                row.append("0")
+        labels.append(row)
+    labels = np.asarray(labels)
+    
+    # Inizializza la figura
+    plt.figure(figsize=(10, 8))
+    
+    # Plotta la heatmap
+    # Usiamo il cmap 'Blues' o 'YlGnBu' che rende molto leggibili i blocchi sulla diagonale
+    sns.heatmap(
+        cm_normalized, 
+        annot=labels, 
+        fmt="", 
+        cmap="Blues", 
+        cbar=True,
+        xticklabels=class_names, 
+        yticklabels=class_names,
+        vmin=0.0,
+        vmax=1.0,
+        annot_kws={"size": 11, "weight": "bold"} # Font dei numeri dentro le celle
+    )
+    
+    # Label e formattazione assi
+    plt.title("Matrice di Confusione del Modello SHARP", fontsize=14, pad=15, weight='bold')
+    plt.ylabel("Classe Reale (Ground Truth)", fontsize=12, labelpad=10)
+    plt.xlabel("Classe Predetta", fontsize=12, labelpad=10)
+    
+    # Ruota i tick per evitare che si sovrappongano se i nomi sono lunghi
+    plt.xticks(rotation=45, ha="right", fontsize=10)
+    plt.yticks(rotation=0, fontsize=10)
     
     plt.tight_layout()
     plt.show()
