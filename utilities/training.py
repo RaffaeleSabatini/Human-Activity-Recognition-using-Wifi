@@ -23,9 +23,9 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
         correct     += (pred == y).float().sum().item()
 
         # Backpropagation
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
         
         # Verbose
         current += len(X)

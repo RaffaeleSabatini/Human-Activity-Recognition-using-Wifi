@@ -1,8 +1,10 @@
 import numpy as np
 import numpy.random as rnd
+import torch
 
 from os import listdir, makedirs, path
 from glob import glob
+from sympy import python
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 
@@ -141,3 +143,77 @@ def compute_metrics(metrics, model, validation_dataset, labels, device, debug=Fa
         output["f1"] = f1_score
 
     return output
+
+#---------------------------------------------------------------------------------------------
+#--------------------------------------  MODEL SAVING  ---------------------------------------
+#---------------------------------------------------------------------------------------------
+
+def save_best_F1_model(model, metrics):
+    """
+    Save the current model if it has a better mean F1-score than
+    the currently stored best model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Current model.
+
+    metrics : dict
+        Dictionary returned by compute_metrics().
+        Must contain the "f1" key.
+    """
+
+    best_model_dir = "best_model"
+    model_path = path.join(best_model_dir, "model.pth")
+    metrics_path = path.join(best_model_dir, "metrics.npz")
+
+    # Mean F1-score of the current model
+    current_f1_mean = np.mean(metrics["f1"])
+
+    # If no best model exists, save the current one
+    if not path.exists(best_model_dir):
+        makedirs(best_model_dir)
+
+        torch.save(model, model_path)
+
+        np.savez(
+            metrics_path,
+            **metrics,
+            mean_f1=current_f1_mean
+        )
+
+        print(f"Best model saved! Mean F1-score: {current_f1_mean:.4f}")
+
+        return True
+
+    # Load metrics of the previously saved best model
+    old_metrics = np.load(metrics_path)
+    old_f1_mean = float(old_metrics["mean_f1"])
+
+    # Replace the old model if the current one is better
+    if current_f1_mean > old_f1_mean:
+
+        torch.save(model, model_path)
+
+        np.savez(
+            metrics_path,
+            **metrics,
+            mean_f1=current_f1_mean
+        )
+
+        print(
+            f"New best model saved! "
+            f"Mean F1-score: {old_f1_mean:.4f} -> {current_f1_mean:.4f}"
+        )
+
+        return True
+
+    else:
+        print(
+            f"Model not saved. "
+            f"Mean F1-score: {current_f1_mean:.4f} "
+            f"(best: {old_f1_mean:.4f})"
+        )
+
+        return False
+
