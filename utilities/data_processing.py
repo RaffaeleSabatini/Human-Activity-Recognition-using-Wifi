@@ -184,7 +184,7 @@ def save_best_F1_model(model, metrics):
 
         print(f"Best model saved! Mean F1-score: {current_f1_mean:.4f}")
 
-        return True
+        return 
 
     # Load metrics of the previously saved best model
     old_metrics = np.load(metrics_path)
@@ -206,7 +206,7 @@ def save_best_F1_model(model, metrics):
             f"Mean F1-score: {old_f1_mean:.4f} -> {current_f1_mean:.4f}"
         )
 
-        return True
+        return 
 
     else:
         print(
@@ -215,5 +215,5 @@ def save_best_F1_model(model, metrics):
             f"(best: {old_f1_mean:.4f})"
         )
 
-        return False
+        return 
 
