@@ -1,25 +1,28 @@
 import torch
 import numpy as np
 
+import torchvision.transforms.functional as F
 from os import listdir
 from os.path import isdir
 from torch.utils.data import Dataset, TensorDataset
 from tqdm import tqdm
 
 class DopplerDataset(Dataset):
-    def __init__(self, dataset_dir, activities, db_conversion, normalization, transform=None, target_transform=None):
+    def __init__(self, dataset_dir, activities, db_conversion, normalization, augmentation=False, transform=None, target_transform=None):
         self.dataset_dir      = dataset_dir
         self.labels_map       = activities
         self.transform        = transform
         self.target_transform = target_transform
+        self.augmentation     = augmentation
 
         # Loading the full dataset in memory
         self.images_list  = sorted([img_name for img_name in listdir(dataset_dir) if img_name.endswith('.npy') and img_name.startswith('S')])
-        self.dataset_size = len(self.images_list)
+        self.dataset_size = len(self.images_list) if not augmentation else len(self.images_list)*2
         self.dataset      = torch.zeros((self.dataset_size, 100, 340), dtype=torch.float32)
         self.labels       = torch.zeros(self.dataset_size, dtype=torch.long)
           
         print(f"Loading dataset {dataset_dir} in memory...")
+        j = 0
         for i, img_name in tqdm(enumerate(self.images_list)):
             # Image pre-processing 
             sample = np.load(dataset_dir+'/'+img_name, allow_pickle=True).T.copy()
@@ -33,11 +36,17 @@ class DopplerDataset(Dataset):
             if normalization:
                 sample = (sample - sample.mean())/sample.std()
 
-            self.dataset[i] = torch.tensor(sample, dtype=torch.float32) 
+            self.dataset[j] = torch.tensor(sample, dtype=torch.float32)
+            if self.augmentation:
+                self.dataset[j+1] = F.hflip(self.dataset[j])
 
             # Label loading
             label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J    
-            self.labels[i] = torch.tensor(self.labels_map[label], dtype=torch.int32) 
+            self.labels[j] = torch.tensor(self.labels_map[label], dtype=torch.int32)
+            if self.augmentation:
+                self.labels[j+1] = torch.tensor(self.labels_map[label], dtype=torch.int32)
+
+            j += 2 if self.augmentation else 1
         print(f"Dataset is loaded!")
 
     def __len__(self):        
@@ -59,6 +68,7 @@ class DopplerDataset(Dataset):
         print(f"\n{"-"*10} DATASET INFO {"-"*10}")
         print(f"Dataset directory:\n{self.dataset_dir}")
         print(f"Labels dictionary:\n{self.labels_map}")
+        print(f"Dataset size: {self.dataset_size}")
         print(f"{"-"*34}\n")
 
     def retrieve_activity(self, label):
