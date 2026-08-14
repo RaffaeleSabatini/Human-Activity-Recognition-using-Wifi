@@ -17,7 +17,8 @@ class DopplerDataset(Dataset):
 
         # Loading the full dataset in memory
         self.images_list  = sorted([img_name for img_name in listdir(dataset_dir) if img_name.endswith('.npy') and img_name.startswith('S')])
-        self.dataset_size = len(self.images_list) if not augmentation else len(self.images_list)*2
+        size_multiplier = 2 if augmentation in ["h", "v"] else 3 if augmentation == "hv" else 1
+        self.dataset_size = len(self.images_list)*size_multiplier
         self.dataset      = torch.zeros((self.dataset_size, 100, 340), dtype=torch.float32)
         self.labels       = torch.zeros(self.dataset_size, dtype=torch.long)
           
@@ -35,18 +36,29 @@ class DopplerDataset(Dataset):
                 sample = sample-sample.max()
             if normalization:
                 sample = (sample - sample.mean())/sample.std()
-
+            
+            # Image and label loading
             self.dataset[j] = torch.tensor(sample, dtype=torch.float32)
-            if self.augmentation:
-                self.dataset[j+1] = F.hflip(self.dataset[j])
-
-            # Label loading
-            label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J    
+            label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J   
             self.labels[j] = torch.tensor(self.labels_map[label], dtype=torch.int32)
-            if self.augmentation:
-                self.labels[j+1] = torch.tensor(self.labels_map[label], dtype=torch.int32)
 
-            j += 2 if self.augmentation else 1
+            if self.augmentation == "h":
+                self.dataset[j+1] = F.hflip(self.dataset[j])
+                self.labels[j+1] = torch.tensor(self.labels_map[label], dtype=torch.int32)
+                j += 2
+            elif self.augmentation == "v":
+                self.dataset[j+1] = F.vflip(self.dataset[j])
+                self.labels[j+1] = torch.tensor(self.labels_map[label], dtype=torch.int32)
+                j += 2
+            elif self.augmentation == "hv":
+                self.dataset[j+1] = F.hflip(self.dataset[j])
+                self.dataset[j+2] = F.vflip(self.dataset[j])
+                self.labels[j+1] = torch.tensor(self.labels_map[label], dtype=torch.int32)
+                self.labels[j+2] = torch.tensor(self.labels_map[label], dtype=torch.int32)
+                j += 3
+            else:
+                j += 1
+            
         print(f"Dataset is loaded!")
 
     def __len__(self):        
