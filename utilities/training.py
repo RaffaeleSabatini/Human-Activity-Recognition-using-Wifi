@@ -17,7 +17,8 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
         y = y.to(device)
 
         # Compute prediction and loss
-        pred, logits = model(X, return_pred=True)
+        logits = model(X)
+        pred = torch.argmax(logits, dim=1)
         loss         = loss_fn(logits, y)
         avg_loss    += loss.item()
         correct     += (pred == y).float().sum().item()
@@ -50,7 +51,8 @@ def test_loop(model, dataloader, loss_fn, device, verbosity, fusion="soft"):
             X = X.to(device)
             y = y.to(device)
 
-            pred, logits = model(X, return_pred=True)  # Shapes: (batch), (batch, activity)
+            logits = model(X)  # Shapes: (batch), (batch, activity)
+            pred = torch.argmax(logits, dim=1) 
             test_loss += loss_fn(logits, y).item()
 
             if torch.any(y != y[0]):

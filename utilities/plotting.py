@@ -113,7 +113,7 @@ def plot_confusion_matrix(cm, class_names):
     )
     
     # Label e formattazione assi
-    plt.title("Matrice di Confusione del Modello SHARP", fontsize=14, pad=15, weight='bold')
+    plt.title("Matrice di Confusione del Modello", fontsize=14, pad=15, weight='bold')
     plt.ylabel("Classe Reale (Ground Truth)", fontsize=12, labelpad=10)
     plt.xlabel("Classe Predetta", fontsize=12, labelpad=10)
     

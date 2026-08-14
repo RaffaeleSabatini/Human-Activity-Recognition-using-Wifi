@@ -43,7 +43,7 @@ class SHARP(nn.Module):
             nn.Linear(in_features=25500, out_features=n_features) # corresponds to number of activities
         )
     
-    def forward(self, x, return_pred):
+    def forward(self, x, return_pred=False):
         x1 = self.branch1(x)
         x2 = self.branch2(x)
         x3 = self.branch3(x)

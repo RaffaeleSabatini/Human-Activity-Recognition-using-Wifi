@@ -111,8 +111,10 @@ def compute_metrics(metrics, model, validation_dataset, labels, device, debug=Fa
         for X, Y in tqdm(single_activity_dataloader):
             X = X.to(device)
             Y = Y.to(device)
-            
-            pred, logits = model(X.unsqueeze(1), return_pred=True)
+
+            with torch.no_grad():
+                logits = model(X.unsqueeze(1))
+                pred = logits.argmax(dim=1)
             pred_labels, counts = np.unique(pred.cpu().numpy(), return_counts=True)
             counts_matrix[i, pred_labels] += counts
 
