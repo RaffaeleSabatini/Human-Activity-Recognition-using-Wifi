@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from torch import nn
 from time import time
+import copy
 
 def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
     size = len(data_loader.dataset)
@@ -93,6 +94,8 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
     test_accuracy_history = np.zeros(epochs)
     train_time_history = np.zeros(epochs)
     start = time()
+    best_accuracy = 0
+    best_model_state = None
 
     print("Starting model training...")
     print(f"Completed epochs: 0/{epochs} ------ Time (total): {0:.2f} ------ Time (relative): {0:.2f}\n")
@@ -108,6 +111,16 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
         test_accuracy_history[epoch] = test_accuracy
         train_time_history[epoch] = train_time
 
+        # Keep best model
+        if test_accuracy > best_accuracy:
+            best_accuracy = test_accuracy
+            best_model_state = copy.deepcopy(model.state_dict())
+            print(f"New best model saved with accuracy: {best_accuracy:.2f}%")
+
         print(f"Completed epochs: {epoch+1}/{epochs} ------ Time (total): {time()-start:.2f} ------ Time (relative): {time()-relative_start:.2f}\n")
+
+    # Load best model
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
     
     return train_loss_history, test_loss_history, train_accuracy_history, test_accuracy_history, train_time_history
