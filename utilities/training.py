@@ -98,7 +98,7 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
     best_model_state = None
 
     print("Starting model training...")
-    print(f"Completed epochs: 0/{epochs} ------ Time (total): {0:.2f} ------ Time (relative): {0:.2f}\n")
+    print(f"Completed epochs: 0/{epochs} ------ Time (total): {0:.2f} ------ Time (relative): {0:.2f}")
     for epoch in range(epochs):
         relative_start = time()
 
@@ -111,13 +111,14 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
         test_accuracy_history[epoch] = test_accuracy
         train_time_history[epoch] = train_time
 
+        print(f"Completed epochs: {epoch+1}/{epochs} ------ Time (total): {time()-start:.2f} ------ Time (relative): {time()-relative_start:.2f}")
+
         # Keep best model
         if test_accuracy > best_accuracy:
             best_accuracy = test_accuracy
             best_model_state = copy.deepcopy(model.state_dict())
-            print(f"New best model saved with accuracy: {best_accuracy:.2f}%")
-
-        print(f"Completed epochs: {epoch+1}/{epochs} ------ Time (total): {time()-start:.2f} ------ Time (relative): {time()-relative_start:.2f}\n")
+            print(f"\nNew best model saved with accuracy: {best_accuracy:.2f}%\n")
+        
 
     # Load best model
     if best_model_state is not None:
