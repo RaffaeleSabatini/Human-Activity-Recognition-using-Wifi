@@ -86,7 +86,7 @@ def test_loop(model, dataloader, loss_fn, device, verbosity, fusion="soft"):
 
 #---------------------------------------------------------------------------------------------------
 
-def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, optimizer, device, verbosity):
+def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, optimizer, device, verbosity, early_stopping=False, patience=10):
     model.to(device)
     train_loss_history = np.zeros(epochs)
     test_loss_history  = np.zeros(epochs)
@@ -96,6 +96,7 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
     start = time()
     best_accuracy = 0
     best_model_state = None
+    best_epoch = 0
 
     print("Starting model training...")
     print(f"Completed epochs: 0/{epochs} ------ Time (total): {0:.2f} ------ Time (relative): {0:.2f}")
@@ -116,8 +117,15 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
         # Keep best model
         if test_accuracy > best_accuracy:
             best_accuracy = test_accuracy
+            best_epoch = epoch
             best_model_state = copy.deepcopy(model.state_dict())
             print(f"\nNew best model saved with accuracy: {best_accuracy:.2f}%\n")
+
+        # Early stopping (to save time)
+        if early_stopping and epoch > epochs//2:
+            if (epoch - best_epoch) > patience:
+                print(f"\nEarly stopping triggered. No improvement in the last {patience} epochs.")
+                break
         
 
     # Load best model
