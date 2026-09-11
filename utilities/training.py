@@ -122,9 +122,9 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
             print(f"\nNew best model saved with accuracy: {best_accuracy:.2f}%\n")
 
         # Early stopping (to save time)
-        if early_stopping and epoch > epochs//2:
+        if early_stopping and epoch > (epochs*2.0//3) and epoch < (epochs-1):
             if (epoch - best_epoch) > patience:
-                print(f"\nEarly stopping triggered. No improvement in the last {patience} epochs.")
+                print(f"\nEarly stopping triggered. No improvement in the last {patience} epochs.\n")
                 break
         
 
