@@ -8,7 +8,7 @@ from torch.utils.data import Dataset, TensorDataset
 from tqdm import tqdm
 
 class DopplerDataset(Dataset):
-    def __init__(self, dataset_dir, activities, db_conversion, normalization, augmentation=False, transform=None, target_transform=None):
+    def __init__(self, dataset_dir, activities, db_conversion=False, normalization=False, augmentation=False, transform=None, target_transform=None):
         self.dataset_dir      = dataset_dir
         self.labels_map       = activities
         self.transform        = transform
@@ -33,7 +33,7 @@ class DopplerDataset(Dataset):
 
             if db_conversion:
                 sample = 10*np.log10(sample) 
-                sample = sample-sample.max()
+                sample = (sample - sample.mean())/sample.std()
             if normalization:
                 sample = (sample - sample.mean())/sample.std()
             
