@@ -12,8 +12,8 @@ from torch.utils.data import DataLoader
 #------------------------------------  DATASET SPLITTING  -------------------------------------
 #----------------------------------------------------------------------------------------------
 
-def create_train_dataset(dataset_path, doppler_trace_size, activity_list):
-    train_dataset = dataset_path.split('/')[0] + "_train"
+def create_train_dataset(dataset_path, doppler_trace_size, activity_list, ds_name=""):
+    train_dataset = dataset_path.split('/')[0] + "_" + ds_name + "_train"
 
     if train_dataset not in listdir():
         print("Creating train dataset...")
@@ -39,8 +39,8 @@ def create_train_dataset(dataset_path, doppler_trace_size, activity_list):
     
 #----------------------------------------------------------------------------------------------
 
-def create_test_dataset(dataset_path, doppler_trace_size, activity_list):
-    test_dataset  = dataset_path.split('/')[0] + "_test"
+def create_test_dataset(dataset_path, doppler_trace_size, activity_list, ds_name=""):
+    test_dataset  = dataset_path.split('/')[0] + "_" + ds_name + "_test"
 
     if test_dataset not in listdir():
         print(f"Creating test dataset...")

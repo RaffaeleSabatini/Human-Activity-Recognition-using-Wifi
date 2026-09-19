@@ -38,7 +38,7 @@ def train_loop(model, data_loader, loss_fn, optimizer, device, verbosity):
     accuracy = correct/size
     return avg_loss, accuracy*100, time()-start
 
-def test_loop(model, dataloader, loss_fn, device, verbosity, fusion="soft"):
+def test_loop(model, dataloader, device, verbosity, fusion="soft"):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
 
@@ -54,11 +54,13 @@ def test_loop(model, dataloader, loss_fn, device, verbosity, fusion="soft"):
 
             logits = model(X)  # Shapes: (batch), (batch, activity)
             pred = torch.argmax(logits, dim=1) 
-            test_loss += loss_fn(logits, y).item()
 
             if torch.any(y != y[0]):
                 print(f"Error: in batch {i} antennas produced different labels for the same task!")
                 break
+
+            probabilities = torch.mean(torch.softmax(logits, dim=1), dim=0)
+            test_loss -= torch.log(probabilities[y[0]] + 1e-8)
             
             if fusion == "soft":
                 probabilities_per_antenna = torch.softmax(logits, dim=1)
@@ -104,7 +106,7 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
         relative_start = time()
 
         train_loss, train_accuracy, train_time = train_loop(model, train_data_loader, loss_fn, optimizer, device, verbosity)
-        test_loss, test_accuracy    = test_loop(model, test_data_loader, loss_fn, device, verbosity)
+        test_loss, test_accuracy    = test_loop(model, test_data_loader, device, verbosity)
 
         train_loss_history[epoch] = train_loss
         test_loss_history[epoch]  = test_loss

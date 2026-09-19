@@ -4,9 +4,7 @@ models/__pycache__
 utilities/__pycache__
 
 # Dataset
-doppler_traces
-doppler_traces_test
-doppler_traces_train
+doppler_traces*
 
 # Papers
 papers

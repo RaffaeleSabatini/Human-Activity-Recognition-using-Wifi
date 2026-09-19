@@ -76,7 +76,7 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     plt.show()
 
 
-def plot_confusion_matrix(cm, class_names):
+def plot_confusion_matrix(cm, class_names, title=""):
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     
     # Crea le annotazioni di testo combinando il conteggio assoluto e la percentuale
@@ -113,7 +113,12 @@ def plot_confusion_matrix(cm, class_names):
     )
     
     # Label e formattazione assi
-    plt.title("Matrice di Confusione del Modello", fontsize=14, pad=15, weight='bold')
+    plt.title(
+        "Matrice di Confusione del Modello" if title == None else title,
+        fontsize=14,
+        pad=15,
+        weight='bold'
+    )
     plt.ylabel("Classe Reale (Ground Truth)", fontsize=12, labelpad=10)
     plt.xlabel("Classe Predetta", fontsize=12, labelpad=10)
     
