@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 #----------------------------------------------------------------------------------------------
 
 def create_train_dataset(dataset_path, doppler_trace_size, activity_list, ds_name=""):
-    train_dataset = dataset_path.split('/')[0] + "_" + ds_name + "_train"
+    train_dataset = dataset_path.split('/')[0] + "_" + ds_name + "train"
 
     if train_dataset not in listdir():
         print("Creating train dataset...")
@@ -40,7 +40,7 @@ def create_train_dataset(dataset_path, doppler_trace_size, activity_list, ds_nam
 #----------------------------------------------------------------------------------------------
 
 def create_test_dataset(dataset_path, doppler_trace_size, activity_list, ds_name=""):
-    test_dataset  = dataset_path.split('/')[0] + "_" + ds_name + "_test"
+    test_dataset  = dataset_path.split('/')[0] + "_" + ds_name + "test"
 
     if test_dataset not in listdir():
         print(f"Creating test dataset...")
@@ -127,21 +127,21 @@ def compute_metrics(metrics, model, validation_dataset, labels, device, debug=Fa
     # Compute metrics only if present in metrics
     output = {m:None for m in metrics}
     if "cm" in metrics or metrics == "all": 
-        confusion_matrix = counts_matrix / np.sum(counts_matrix, axis=1, keepdims=True)
+        confusion_matrix = counts_matrix / (np.sum(counts_matrix, axis=1, keepdims=True) + 1e-9)
         output["cm"]=confusion_matrix
 
     if "precision" in metrics or metrics == "all":
-        precisions = counts_matrix.diagonal() / np.sum(counts_matrix, axis=0)
+        precisions = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=0) + 1e-9)
         output["precision"] = precisions
 
     if "recall" in metrics or metrics == "all":
-        recalls = counts_matrix.diagonal() / np.sum(counts_matrix, axis=1)
+        recalls = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=1) + 1e-9)
         output["recall"] = recalls
 
     if "f1" in metrics or metrics == "all":
-        if "precision" not in metrics: precisions = counts_matrix.diagonal() / np.sum(counts_matrix, axis=0)
-        if "recall" not in metrics: recalls = counts_matrix.diagonal() / np.sum(counts_matrix, axis=1)
-        f1_score = 2*precisions*recalls/(precisions+recalls)
+        if "precision" not in metrics: precisions = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=0) + 1e-9)
+        if "recall" not in metrics: recalls = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=1) + 1e-9)
+        f1_score = 2*precisions*recalls/(precisions+recalls+1e-9)
         output["f1"] = f1_score
 
     return output
