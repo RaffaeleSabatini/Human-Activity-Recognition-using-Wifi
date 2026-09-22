@@ -8,12 +8,13 @@ from torch.utils.data import Dataset, TensorDataset
 from tqdm import tqdm
 
 class DopplerDataset(Dataset):
-    def __init__(self, dataset_dir, activities, db_conversion=False, normalization=False, augmentation=False, transform=None, target_transform=None):
+    def __init__(self, dataset_dir, activities, db_conversion=False, normalization=False, augmentation=False, transform=None, target_transform=None, label_function=None):
         self.dataset_dir      = dataset_dir
         self.labels_map       = activities
         self.transform        = transform
         self.target_transform = target_transform
         self.augmentation     = augmentation
+        self.label_function   = label_function
 
         # Loading the full dataset in memory
         self.images_list  = sorted([img_name for img_name in listdir(dataset_dir) if img_name.endswith('.npy') and img_name.startswith('S')])
@@ -39,7 +40,10 @@ class DopplerDataset(Dataset):
             
             # Image and label loading
             self.dataset[j] = torch.tensor(sample, dtype=torch.float32)
-            label          = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J   
+            if self.label_function is None:
+                label = img_name.split("_")[1][0] # Labels like J1, J2 are intended as J
+            else:
+                label = self.label_function(img_name)
             self.labels[j] = torch.tensor(self.labels_map[label], dtype=torch.int32)
 
             if self.augmentation == "h":
