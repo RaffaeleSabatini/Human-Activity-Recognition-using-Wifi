@@ -24,54 +24,52 @@ def create_train_test_split(dataset_path, doppler_trace_size, activity_list,
         raise ValueError("train_ratio must be between 0 and 1")
 
     dataset_root = dataset_path.split('/')[0]
-    train_dataset = dataset_root + "_" + ds_name + "train"
-    test_dataset = dataset_root + "_" + ds_name + "test"
+    train_dataset = dataset_root + "_" + ds_name + "_train"
+    test_dataset = dataset_root + "_" + ds_name + "_test"
 
     if path.exists(train_dataset) or path.exists(test_dataset):
-        raise FileExistsError(
-            f"Remove or rename existing output directories: {train_dataset}, {test_dataset}"
+        print(f"Train/test datasets already exist: {train_dataset}, {test_dataset}")
+    else:
+        makedirs(train_dataset)
+        makedirs(test_dataset)
+        rng = np.random.default_rng(seed)
+        samples_by_set = {}
+
+        subdir_list = sorted([name for name in glob(dataset_path) if path.isdir(name)])
+        for subdir in subdir_list:
+            source_set = path.basename(subdir)[:2]
+            samples_by_set.setdefault(source_set, [])
+
+            for trace_name in tqdm(sorted(listdir(subdir)), desc=f"Reading {subdir}"):
+                if not trace_name.endswith(".txt") or trace_name.split('_')[1][0] not in activity_list:
+                    continue
+
+                stream = int(trace_name[-5])
+                full_trace = np.load(path.join(subdir, trace_name), allow_pickle=True)
+                n_images = full_trace.shape[0] // doppler_trace_size
+
+                for i in range(n_images):
+                    image_idx = f"{i * 4 + stream:04d}"
+                    image_name = trace_name[:-5] + image_idx + ".npy"
+                    sample = full_trace[
+                        i * doppler_trace_size:(i + 1) * doppler_trace_size, :
+                    ]
+                    samples_by_set[source_set].append((image_name, sample))
+
+        for source_set, samples in samples_by_set.items():
+            rng.shuffle(samples)
+            split_idx = int(len(samples) * train_ratio)
+            for output_dir, selected_samples in (
+                (train_dataset, samples[:split_idx]),
+                (test_dataset, samples[split_idx:]),
+            ):
+                for image_name, sample in selected_samples:
+                    np.save(path.join(output_dir, image_name[:-4]), sample, allow_pickle=True)
+
+        print(
+            f"Created {train_dataset} and {test_dataset} with a "
+            f"{train_ratio:.0%}/{1 - train_ratio:.0%} split per source set."
         )
-
-    makedirs(train_dataset)
-    makedirs(test_dataset)
-    rng = np.random.default_rng(seed)
-    samples_by_set = {}
-
-    subdir_list = sorted([name for name in glob(dataset_path) if path.isdir(name)])
-    for subdir in subdir_list:
-        source_set = path.basename(subdir)[:2]
-        samples_by_set.setdefault(source_set, [])
-
-        for trace_name in tqdm(sorted(listdir(subdir)), desc=f"Reading {subdir}"):
-            if not trace_name.endswith(".txt") or trace_name.split('_')[1][0] not in activity_list:
-                continue
-
-            stream = int(trace_name[-5])
-            full_trace = np.load(path.join(subdir, trace_name), allow_pickle=True)
-            n_images = full_trace.shape[0] // doppler_trace_size
-
-            for i in range(n_images):
-                image_idx = f"{i * 4 + stream:04d}"
-                image_name = trace_name[:-5] + image_idx + ".npy"
-                sample = full_trace[
-                    i * doppler_trace_size:(i + 1) * doppler_trace_size, :
-                ]
-                samples_by_set[source_set].append((image_name, sample))
-
-    for source_set, samples in samples_by_set.items():
-        rng.shuffle(samples)
-        split_idx = int(len(samples) * train_ratio)
-        for output_dir, selected_samples in (
-            (train_dataset, samples[:split_idx]),
-            (test_dataset, samples[split_idx:]),
-        ):
-            for image_name, sample in selected_samples:
-                np.save(path.join(output_dir, image_name[:-4]), sample, allow_pickle=True)
-
-    print(
-        f"Created {train_dataset} and {test_dataset} with a "
-        f"{train_ratio:.0%}/{1 - train_ratio:.0%} split per source set."
-    )
 
 def create_train_dataset(dataset_path, doppler_trace_size, activity_list, ds_name=""):
     train_dataset = dataset_path.split('/')[0] + "_" + ds_name + "train"
