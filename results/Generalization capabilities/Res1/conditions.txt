@@ -1,0 +1,3 @@
+Training done with:
+Batch size: 128 
+LR : found by Optuna study, look into best_models dir. for <model>_hyperparameters.npz
