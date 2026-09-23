@@ -52,7 +52,7 @@ def test_loop(model, dataloader, device, verbosity, fusion="soft"):
             X = X.to(device)
             y = y.to(device)
 
-            logits = model(X)  # Shapes: (batch), (batch, activity)
+            logits = model(X)  # Shape: (batch, activity)
             pred = torch.argmax(logits, dim=1) 
 
             if torch.any(y != y[0]):
@@ -86,9 +86,40 @@ def test_loop(model, dataloader, device, verbosity, fusion="soft"):
 
     return test_loss, accuracy*100
 
+def test_loop_PI(model, dataloader, device, loss_fn, verbosity):
+    num_batches = len(dataloader)
+    num_samples = len(dataloader.dataset)
+
+    # Set the model to evaluation mode
+    model.eval()
+    test_loss, correct = 0, 0
+
+    # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode
+    with torch.no_grad():
+        for i, (X, y) in enumerate(dataloader):
+            X = X.to(device)
+            y = y.to(device)
+
+            logits = model(X)  # Shape: (batch, activity)
+            pred = torch.argmax(logits, dim=1) 
+
+            # Compute loss for the batch
+            loss = loss_fn(logits, y)
+            test_loss += loss.item()
+            correct += (pred == y).float().sum().item()
+
+    test_loss /= num_batches
+    accuracy = correct/num_samples
+
+    if verbosity:
+        print(f"Test Error: \n Accuracy: {(100*accuracy):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+    return test_loss, accuracy*100
+            
+
 #---------------------------------------------------------------------------------------------------
 
-def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, optimizer, device, verbosity, early_stopping=False, patience=10):
+def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, optimizer, device, verbosity, early_stopping=False, patience=10, PI=False):
     model.to(device)
     train_loss_history = np.zeros(epochs)
     test_loss_history  = np.zeros(epochs)
@@ -106,7 +137,10 @@ def train_model(model, train_data_loader, test_data_loader, epochs, loss_fn, opt
         relative_start = time()
 
         train_loss, train_accuracy, train_time = train_loop(model, train_data_loader, loss_fn, optimizer, device, verbosity)
-        test_loss, test_accuracy    = test_loop(model, test_data_loader, device, verbosity)
+        if PI:
+            test_loss, test_accuracy = test_loop_PI(model, test_data_loader, device, loss_fn, verbosity)
+        else:
+            test_loss, test_accuracy    = test_loop(model, test_data_loader, device, verbosity)
 
         train_loss_history[epoch] = train_loss
         test_loss_history[epoch]  = test_loss
