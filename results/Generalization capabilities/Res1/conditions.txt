@@ -1,3 +1,1 @@
-Training done with:
-Batch size: 128 
-LR : found by Optuna study, look into best_models dir. for <model>_hyperparameters.npz
+Both learning rate and batch size optimized, inspect model_hyperparams_1 for more info
