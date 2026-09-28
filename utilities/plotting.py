@@ -3,6 +3,18 @@ import seaborn as sns
 import numpy as np
 import torch
 
+plt.rcParams.update({
+    "figure.figsize": (3.3, 2.4),
+
+    "font.size": 11,
+    "axes.labelsize": 11,
+    "axes.titlesize": 12,
+    "xtick.labelsize": 10,
+    "ytick.labelsize": 10,
+    "legend.fontsize": 10,
+
+    "lines.linewidth": 1.5,
+})
 
 def plot_dataset(cols, rows, dataset, activities, labels):
     fig, axes = plt.subplots(rows, cols, figsize=(14, 10))
@@ -33,7 +45,7 @@ def plot_dataset(cols, rows, dataset, activities, labels):
 def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     epochs = range(1, len(train_loss) + 1)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    fig.suptitle(title)
+    fig.suptitle(title, weight="bold")
 
     # --------------------------------------------------------------------------
     # GRAPH 1: LOSS HISTORY
@@ -47,8 +59,8 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     ax1.plot(min_test_loss_idx + 1, test_loss[min_test_loss_idx], 'go', markersize=10, 
              label=f'Min Test Loss: {test_loss[min_test_loss_idx]:.4f}')
     
-    ax1.set_title('Andamento della Loss durante l\'Addestramento', fontsize=12, pad=10)
-    ax1.set_xlabel('Epoca', fontsize=10)
+    ax1.set_title('Loss profile during training', fontsize=12, pad=10)
+    ax1.set_xlabel('Epoch', fontsize=10)
     ax1.set_ylabel('Loss', fontsize=10)
     ax1.set_xticks(epochs)
     ax1.grid(True, linestyle=':', alpha=0.6)
@@ -65,8 +77,8 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     ax2.plot(max_test_acc_idx + 1, test_accuracy[max_test_acc_idx], 'go', markersize=10, 
              label=f'Max Test Accuracy: {test_accuracy[max_test_acc_idx]:.1f}%')
     
-    ax2.set_title('Andamento dell\'Accuratezza', fontsize=12, pad=10)
-    ax2.set_xlabel('Epoca', fontsize=10)
+    ax2.set_title('Accuracy profile during training', fontsize=12, pad=10)
+    ax2.set_xlabel('Epoch', fontsize=10)
     ax2.set_ylabel('Accuracy (%)', fontsize=10)
     ax2.set_xticks(epochs)
     ax2.grid(True, linestyle=':', alpha=0.6)
@@ -119,8 +131,8 @@ def plot_confusion_matrix(cm, class_names, title=""):
         pad=15,
         weight='bold'
     )
-    plt.ylabel("Classe Reale (Ground Truth)", fontsize=12, labelpad=10)
-    plt.xlabel("Classe Predetta", fontsize=12, labelpad=10)
+    plt.ylabel("Real class (Ground Truth)", fontsize=12, labelpad=10)
+    plt.xlabel("Predicted class", fontsize=12, labelpad=10)
     
     # Ruota i tick per evitare che si sovrappongano se i nomi sono lunghi
     plt.xticks(rotation=45, ha="right", fontsize=10)
@@ -154,9 +166,9 @@ def plot_f1_score(precisions, recalls, f1_scores, class_names):
     )
     
     # Label e formattazione
-    plt.title("Report delle Metriche per Classe", fontsize=14, pad=18, weight='bold')
-    plt.xlabel("Metriche di Performance", fontsize=11, labelpad=12, weight='semibold')
-    plt.ylabel("Classi", fontsize=11, labelpad=12, weight='semibold')
+    plt.title("Metrics report for each class", fontsize=14, pad=18, weight='bold')
+    plt.xlabel("Performance metrics", fontsize=11, labelpad=12, weight='semibold')
+    plt.ylabel("Classes", fontsize=11, labelpad=12, weight='semibold')
     
     # Ruotiamo leggermente i tick 
     plt.xticks(fontsize=10, weight='semibold')
