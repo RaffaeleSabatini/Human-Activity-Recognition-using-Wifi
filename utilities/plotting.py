@@ -6,12 +6,12 @@ import torch
 plt.rcParams.update({
     "figure.figsize": (3.3, 2.4),
 
-    "font.size": 11,
-    "axes.labelsize": 11,
-    "axes.titlesize": 12,
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
-    "legend.fontsize": 10,
+    "font.size": 14,
+    "axes.labelsize": 14,
+    "axes.titlesize": 14,
+    "xtick.labelsize": 14,
+    "ytick.labelsize": 14,
+    "legend.fontsize": 14,
 
     "lines.linewidth": 1.5,
 })
@@ -27,15 +27,14 @@ def plot_dataset(cols, rows, dataset, activities, labels):
         ax = axes[i]
         im = ax.imshow(img[0, :, :], aspect='auto', cmap='viridis')
         
-        ax.set_title(f"{activities[label_idx]} ({labels[label_idx]})", fontsize=10, pad=8)
+        ax.set_title(f"{activities[label_idx]} ({labels[label_idx]})", pad=8)
         
-        ax.set_xlabel("Time (bin)", fontsize=8)
-        ax.set_ylabel(r"$v_p \cos \alpha$ (bin)", fontsize=8)
-        ax.tick_params(axis='both', which='major', labelsize=8)
+        ax.set_xlabel("Time (bin)")
+        ax.set_ylabel(r"$v_p \cos \alpha$ (bin)",)
+        ax.tick_params(axis='both', which='major')
         
         cbar = fig.colorbar(im, ax=ax)
-        cbar.ax.tick_params(labelsize=8)
-        cbar.set_label('Power (db)', fontsize=8)
+        cbar.set_label('Power (db)')
 
     plt.tight_layout()
     plt.show()
@@ -60,11 +59,11 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
              label=f'Min Test Loss: {test_loss[min_test_loss_idx]:.4f}')
     
     ax1.set_title('Loss profile during training', fontsize=12, pad=10)
-    ax1.set_xlabel('Epoch', fontsize=10)
-    ax1.set_ylabel('Loss', fontsize=10)
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Loss')
     ax1.set_xticks(epochs)
     ax1.grid(True, linestyle=':', alpha=0.6)
-    ax1.legend(fontsize=9, loc='upper right')
+    ax1.legend(loc='upper right')
     
     # --------------------------------------------------------------------------
     # GRAPH 2: ACCURACY HISTORY
@@ -77,12 +76,12 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     ax2.plot(max_test_acc_idx + 1, test_accuracy[max_test_acc_idx], 'go', markersize=10, 
              label=f'Max Test Accuracy: {test_accuracy[max_test_acc_idx]:.1f}%')
     
-    ax2.set_title('Accuracy profile during training', fontsize=12, pad=10)
-    ax2.set_xlabel('Epoch', fontsize=10)
-    ax2.set_ylabel('Accuracy (%)', fontsize=10)
+    ax2.set_title('Accuracy profile during training', pad=10)
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Accuracy (%)')
     ax2.set_xticks(epochs)
     ax2.grid(True, linestyle=':', alpha=0.6)
-    ax2.legend(fontsize=9, loc='lower right')
+    ax2.legend(loc='lower right')
     
     plt.tight_layout()
     plt.show()
@@ -127,16 +126,15 @@ def plot_confusion_matrix(cm, class_names, title=""):
     # Label e formattazione assi
     plt.title(
         "Matrice di Confusione del Modello" if title == None else title,
-        fontsize=14,
         pad=15,
         weight='bold'
     )
-    plt.ylabel("Real class (Ground Truth)", fontsize=12, labelpad=10)
-    plt.xlabel("Predicted class", fontsize=12, labelpad=10)
+    plt.ylabel("Real class (Ground Truth)", labelpad=10)
+    plt.xlabel("Predicted class", labelpad=10)
     
     # Ruota i tick per evitare che si sovrappongano se i nomi sono lunghi
-    plt.xticks(rotation=45, ha="right", fontsize=10)
-    plt.yticks(rotation=0, fontsize=10)
+    plt.xticks(rotation=45, ha="right")
+    plt.yticks(rotation=0)
     
     plt.tight_layout()
     plt.show()
@@ -166,13 +164,13 @@ def plot_f1_score(precisions, recalls, f1_scores, class_names):
     )
     
     # Label e formattazione
-    plt.title("Metrics report for each class", fontsize=14, pad=18, weight='bold')
-    plt.xlabel("Performance metrics", fontsize=11, labelpad=12, weight='semibold')
-    plt.ylabel("Classes", fontsize=11, labelpad=12, weight='semibold')
+    plt.title("Metrics report for each class", pad=18, weight='bold')
+    plt.xlabel("Performance metrics", labelpad=12, weight='semibold')
+    plt.ylabel("Classes", labelpad=12, weight='semibold')
     
     # Ruotiamo leggermente i tick 
-    plt.xticks(fontsize=10, weight='semibold')
-    plt.yticks(rotation=0, fontsize=10, weight='semibold')
+    plt.xticks(weight='semibold')
+    plt.yticks(rotation=0, weight='semibold')
     
     plt.tight_layout()
     plt.show()
