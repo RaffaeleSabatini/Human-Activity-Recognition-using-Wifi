@@ -7,14 +7,14 @@ import torch
 plt.rcParams.update({
     "figure.figsize": (3.3, 2.4),
 
-    "font.size": 14,
-    "axes.labelsize": 14,
-    "axes.titlesize": 14,
-    "xtick.labelsize": 14,
-    "ytick.labelsize": 14,
-    "legend.fontsize": 14,
+    "font.size": 18,
+    "axes.labelsize": 18,
+    "axes.titlesize": 22,
+    "xtick.labelsize": 18,
+    "ytick.labelsize": 18,
+    "legend.fontsize": 18,
 
-    "lines.linewidth": 1.5,
+    "lines.linewidth": 1.8,
 })
 
 def plot_dataset(cols, rows, dataset, activities, labels):
@@ -59,7 +59,7 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     ax1.plot(min_test_loss_idx + 1, test_loss[min_test_loss_idx], 'go', markersize=10, 
              label=f'Min Test Loss: {test_loss[min_test_loss_idx]:.4f}')
     
-    ax1.set_title('Loss profile during training', fontsize=12, pad=10)
+    ax1.set_title('Loss profile during training', pad=10)
     ax1.set_xlabel('Epoch')
     ax1.set_ylabel('Loss')
     ax1.set_xticks(epochs)
