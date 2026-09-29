@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 import seaborn as sns
 import numpy as np
 import torch
@@ -64,7 +65,9 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     ax1.set_xticks(epochs)
     ax1.grid(True, linestyle=':', alpha=0.6)
     ax1.legend(loc='upper right')
-    
+
+    ax1.xaxis.set_major_locator(MultipleLocator(5))
+    ax1.xaxis.set_minor_locator(MultipleLocator(1))
     # --------------------------------------------------------------------------
     # GRAPH 2: ACCURACY HISTORY
     # --------------------------------------------------------------------------
@@ -82,6 +85,9 @@ def plot_loss(train_loss, test_loss, train_accuracy, test_accuracy, title=""):
     ax2.set_xticks(epochs)
     ax2.grid(True, linestyle=':', alpha=0.6)
     ax2.legend(loc='lower right')
+
+    ax2.xaxis.set_major_locator(MultipleLocator(5))
+    ax2.xaxis.set_minor_locator(MultipleLocator(1))
     
     plt.tight_layout()
     plt.show()
@@ -135,6 +141,7 @@ def plot_confusion_matrix(cm, class_names, title=""):
     # Ruota i tick per evitare che si sovrappongano se i nomi sono lunghi
     plt.xticks(rotation=45, ha="right")
     plt.yticks(rotation=0)
+    from matplotlib.ticker import MultipleLocator
     
     plt.tight_layout()
     plt.show()
