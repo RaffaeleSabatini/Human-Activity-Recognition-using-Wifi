@@ -26,13 +26,20 @@ def plot_dataset(cols, rows, dataset, activities, labels):
         img, label_idx = dataset[sample_idx]
         
         ax = axes[i]
-        im = ax.imshow(img[0, :, :], aspect='auto', cmap='viridis')
+        im = ax.imshow(
+            img[0, :, :], 
+            aspect='auto', 
+            cmap='viridis', 
+            extent=(0, 3, -4.2, 4.2)
+            )
         
         ax.set_title(f"{activities[label_idx]} ({labels[label_idx]})", pad=8)
         
-        ax.set_xlabel("Time (bin)")
-        ax.set_ylabel(r"$v_p \cos \alpha$ (bin)",)
+        ax.set_xlabel("Time [s]")
+        ax.set_ylabel(r"$v_p \cos \alpha$ [m/s]",)
         ax.tick_params(axis='both', which='major')
+        ax.set_yticks([-4, -2, 0, 2, 4])
+        ax.set_xticks(np.linspace(0, 3, 4))
         
         cbar = fig.colorbar(im, ax=ax)
         cbar.set_label('Power (db)')
