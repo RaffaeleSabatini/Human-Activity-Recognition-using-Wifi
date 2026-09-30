@@ -126,7 +126,7 @@ def plot_confusion_matrix(cm, class_names, title=""):
         yticklabels=class_names,
         vmin=0.0,
         vmax=1.0,
-        annot_kws={"size": 11, "weight": "bold"} # Font dei numeri dentro le celle
+        annot_kws={"weight": "bold"} # Font dei numeri dentro le celle
     )
     
     # Label e formattazione assi
