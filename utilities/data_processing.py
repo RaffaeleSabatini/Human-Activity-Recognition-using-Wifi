@@ -131,7 +131,7 @@ def create_test_dataset(dataset_path, doppler_trace_size, activity_list, ds_name
 #------------------------------------  MODEL EVALUATION  -------------------------------------
 #---------------------------------------------------------------------------------------------
 
-def compute_metrics(metrics, model, validation_dataset, labels, device, debug=False):
+def compute_metrics(metrics, model, validation_dataset, labels, device, weighted, debug=False):
     '''
         Computes different metrics of the model, specified by the parameter 'metrics'.
         Possible choices of the metrics are:
@@ -161,9 +161,11 @@ def compute_metrics(metrics, model, validation_dataset, labels, device, debug=Fa
     # Collect counts for each predicted labels in order to handle metrics computations at the end
     model.eval()
     counts_matrix = np.zeros(shape=(len(labels), len(labels)))
+    if weighted: labels_number = np.zeros(shape=len(labels))
     for i in range(len(labels)):
         single_activity_dataset = validation_dataset.retrieve_activity(i)
         single_activity_dataloader = DataLoader(single_activity_dataset, batch_size=128, shuffle=True)
+        if weighted: labels_number[i] = len(single_activity_dataset)
 
         correct = 0
 
@@ -191,16 +193,19 @@ def compute_metrics(metrics, model, validation_dataset, labels, device, debug=Fa
 
     if "precision" in metrics or metrics == "all":
         precisions = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=0) + 1e-9)
+        if weighted: precisions = np.average(precisions, weights=labels_number)
         output["precision"] = precisions
 
     if "recall" in metrics or metrics == "all":
         recalls = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=1) + 1e-9)
+        if weighted: recalls = np.average(recalls, weights=labels_number)
         output["recall"] = recalls
 
     if "f1" in metrics or metrics == "all":
-        if "precision" not in metrics: precisions = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=0) + 1e-9)
-        if "recall" not in metrics: recalls = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=1) + 1e-9)
+        precisions = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=0) + 1e-9)
+        recalls = counts_matrix.diagonal() / (np.sum(counts_matrix, axis=1) + 1e-9)
         f1_score = 2*precisions*recalls/(precisions+recalls+1e-9)
+        if weighted: f1_score = np.average(f1_score, weights=labels_number)
         output["f1"] = f1_score
 
     return output
